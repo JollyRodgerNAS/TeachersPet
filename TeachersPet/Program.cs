@@ -3,6 +3,8 @@ using System.Collections;
 using TeachersPet;
 using MongoDB.Driver;
 using MongoDB.Bson;
+using static System.Net.Mime.MediaTypeNames;
+using Amazon.Runtime;
 
 string connectionString = "mongodb+srv://nickstewart13:X3PbNKiLE8Bi8nR2@teacherspet.ttfrwva.mongodb.net/?retryWrites=true&w=majority";
 string databaseName = "StudentDatabase";
@@ -18,13 +20,17 @@ bool isMongoLive = db.RunCommandAsync((Command<BsonDocument>)"{ping:1}").Wait(10
 
 if (isMongoLive)
 {
-    Console.WriteLine("Do you want to create a student[0], read a student[1], update a student[2], see all students[3] or delete a student[4]?");
-    Console.WriteLine("Input the corresponding number to the operation you would like to perform: ");
-    string response = Console.ReadLine();
     bool proceed = true;
     int count;
+    Console.WriteLine("Do you want to create a student[0], read a student[1], update a student[2], see all students[3] or delete a student[4]?");
+    Console.WriteLine("Enter [9] to close out the program.");
+    Console.WriteLine("Input the corresponding number to the operation you would like to perform: ");
+    string response = Console.ReadLine();
     while (proceed == true)
     {
+        //Console.WriteLine("Do you want to create a student[0], read a student[1], update a student[2], see all students[3] or delete a student[4]?");
+        //Console.WriteLine("Input the corresponding number to the operation you would like to perform: ");
+        //string response = Console.ReadLine();
 
         if (response == "0")
         {
@@ -42,12 +48,19 @@ if (isMongoLive)
             {
                 proceed = true;
                 Console.WriteLine("Do you want to create a student[0], read a student[1], update a student[2], see all students[3] or delete a student[4]?");
+                Console.WriteLine("Enter [9] to close out the program.");
                 Console.WriteLine("Input the corresponding number to the operation you would like to perform.");
                 response = Console.ReadLine().ToUpper();
             }
-            else
+            else if (anotherOperation == "N")
             {
                 proceed = false;
+            }
+            else
+            {
+                //Console.WriteLine("Invalid choice!");
+                response = null;
+                proceed = true;
             }
         }
         else if (response == "1")
@@ -60,12 +73,19 @@ if (isMongoLive)
             {
                 proceed = true;
                 Console.WriteLine("Do you want to create a student[0], read a student[1], update a student[2], see all students[3] or delete a student[4]?");
+                Console.WriteLine("Enter [9] to close out the program.");
                 Console.WriteLine("Input the corresponding number to the operation you would like to perform.");
                 response = Console.ReadLine().ToUpper();
             }
-            else
+            else if (anotherOperation == "N")
             {
                 proceed = false;
+            }
+            else
+            {
+               //Console.WriteLine("Invalid choice!");
+                response = null;
+                proceed = true;
             }
         }
         else if (response == "2")
@@ -78,12 +98,19 @@ if (isMongoLive)
             {
                 proceed = true;
                 Console.WriteLine("Do you want to create a student[0], read a student[1], update a student[2], see all students[3] or delete a student[4]?");
+                Console.WriteLine("Enter [9] to close out the program.");
                 Console.WriteLine("Input the corresponding number to the operation you would like to perform.");
                 response = Console.ReadLine().ToUpper();
             }
-            else
+            else if (anotherOperation == "N")
             {
                 proceed = false;
+            }
+            else
+            {
+                //Console.WriteLine("Invalid choice!");
+                response = null;
+                proceed = true;
             }
         }
         else if (response == "3")
@@ -96,12 +123,19 @@ if (isMongoLive)
             {
                 proceed = true;
                 Console.WriteLine("Do you want to create a student[0], read a student[1], update a student[2], see all students[3] or delete a student[4]?");
+                Console.WriteLine("Enter [9] to close out the program.");
                 Console.WriteLine("Input the corresponding number to the operation you would like to perform.");
                 response = Console.ReadLine().ToUpper();
             }
-            else
+            else if (anotherOperation == "N")
             {
                 proceed = false;
+            }
+            else
+            {
+                //Console.WriteLine("Invalid choice!");
+                response = null;
+                proceed = true;
             }
         }
         else if (response == "4")
@@ -114,18 +148,34 @@ if (isMongoLive)
             {
                 proceed = true;
                 Console.WriteLine("Do you want to create a student[0], read a student[1], update a student[2], see all students[3] or delete a student[4]?");
+                Console.WriteLine("Enter [9] to close out the program.");
                 Console.WriteLine("Input the corresponding number to the operation you would like to perform.");
                 response = Console.ReadLine().ToUpper();
             }
-            else
+            else if (anotherOperation == "N")
             {
                 proceed = false;
             }
+            else
+            {
+                //Console.WriteLine("Invalid choice!");
+                response = null;
+                proceed = true;
+            }
+        }
+        else if (response == "9")
+        {
+            Console.WriteLine("Thanks for using TeachersPet!");
+            proceed = false;
         }
         else
         {
             Console.WriteLine("Invalid choice!");
-            proceed = false;
+            Console.WriteLine("Do you want to create a student[0], read a student[1], update a student[2], see all students[3] or delete a student[4]?");
+            Console.WriteLine("Enter [9] to close out the program.");
+            Console.WriteLine("Input the corresponding number to the operation you would like to perform: ");
+            response = Console.ReadLine();
+            proceed = true;
         }
     }
 }
@@ -215,6 +265,7 @@ async void UpdateStudent()
     Console.WriteLine("Enter parent phone number");
     string newParentNumber = Console.ReadLine().ToUpper();
     var againUserRequest = await collection.FindAsync(studentLastName => true);
+    bool found = false;
 
     Student stud = new Student(newStudentFirstName, newStudentLastName, newParentFirst, newParentLast, newEmail, newEmailBackup, newParentNumber);
 
@@ -222,16 +273,17 @@ async void UpdateStudent()
     {
         if (user.LastName == studentLastName && user.FirstName == studentFirstName)
         {
-            Console.WriteLine($"{studentFirstName} {studentLastName}====== {user.FirstName} {user.LastName}");
-            await collection.DeleteOneAsync(studentLastName => true);
+            var userId = user.Id;
+            var filter = Builders<Student>.Filter.Eq("Id", userId);
+            await collection.DeleteOneAsync(filter);
             await collection.InsertOneAsync(stud);
+            found = true;
 
         }
-        /*else
-        {
-            Console.WriteLine("update failed");
-        }*/
-
+    }
+    if (found == false)
+    {
+        Console.WriteLine("No student by that name exists!");
     }
 
 
@@ -245,14 +297,21 @@ async void DeleteStudent()
     Console.WriteLine("Enter student last name");
     string studentLastName = Console.ReadLine().ToUpper();
     var againUserRequest = await collection.FindAsync(studentLastName => true);
+    bool found = false;
     
     foreach (var user in againUserRequest.ToList())
     {
-        var filter = Builders<Student>.Filter.Regex(user.LastName, studentLastName);
         if (user.LastName == studentLastName && user.FirstName == studentFirstName)
         {
+            var userId = user.Id;
+            var filter = Builders<Student>.Filter.Eq("Id", userId);
             await collection.DeleteOneAsync(filter);
+            found = true;
         }
+    }
+    if (found == false)
+    {
+        Console.WriteLine("No student by that name exists!");
     }
 
 }
